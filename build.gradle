@@ -1,0 +1,41 @@
+plugins { id 'java' }
+
+group = 'com.taskmanjournal'
+version = '0.5.1'
+
+repositories {
+    maven { url = 'https://repo.runelite.net'; content { includeGroupByRegex 'net\\.runelite.*' } }
+    mavenCentral()
+}
+
+def runeLiteVersion = 'latest.release'
+dependencies {
+    compileOnly "net.runelite:client:${runeLiteVersion}"
+    testImplementation "net.runelite:client:${runeLiteVersion}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(11)
+}
+
+tasks.register('run', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.taskmanjournal.JournalLauncher'
+    args '--developer-mode'
+    jvmArgs '-ea'
+}
+
+tasks.register('coreCheck', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.taskmanjournal.CoreChecks'
+    jvmArgs '-ea'
+}
+check.dependsOn coreCheck
+
+tasks.register('integrationCheck', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.taskmanjournal.IntegrationChecks'
+    jvmArgs '-ea', '-Djava.awt.headless=true'
+}
+check.dependsOn integrationCheck

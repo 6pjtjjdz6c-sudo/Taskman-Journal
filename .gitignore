@@ -1,0 +1,12 @@
+.gradle/
+build/
+.idea/
+*.iml
+
+prebuilt/
+.runelite/
+credentials.properties
+*.log
+*.bak
+.DS_Store
+Thumbs.db
