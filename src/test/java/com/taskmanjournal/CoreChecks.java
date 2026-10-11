@@ -3,6 +3,7 @@ package com.taskmanjournal;
 import com.google.gson.GsonBuilder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import net.runelite.client.util.Filepath;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -88,7 +89,7 @@ public final class CoreChecks {
     private static void persistence() throws Exception {
         Path directory = Files.createTempDirectory("taskman-journal-tests-");
         try {
-            JournalStore store = new JournalStore(directory, new GsonBuilder().setPrettyPrinting().create());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new GsonBuilder().setPrettyPrinting().create());
             Journal first = store.load("123");
             JournalEngine engine = new JournalEngine(first);
             engine.start("Persistent task", xp(0, 0), Instant.EPOCH);
@@ -184,7 +185,7 @@ public final class CoreChecks {
         check(!JournalExport.csv(journal).contains("Turoth task"), "Deleted entries excluded from export");
         Path directory = Files.createTempDirectory("taskman-history-");
         try {
-            JournalStore store = new JournalStore(directory, new GsonBuilder().create());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new GsonBuilder().create());
             store.save(journal);
             Journal restored = store.load("5");
             check(restored.completed.size() == 1 && restored.active.totalXp() == 13,
@@ -242,7 +243,7 @@ public final class CoreChecks {
             "Tracked completion follows historical and incidental entries");
         Path directory = Files.createTempDirectory("taskman-manual-");
         try {
-            JournalStore store = new JournalStore(directory, new GsonBuilder().create());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new GsonBuilder().create());
             store.save(journal);
             Journal restored = store.load("6");
             check(restored.completed.get(0).manual && !restored.completed.get(2).manual,
@@ -295,7 +296,7 @@ public final class CoreChecks {
             "CSV exports tier");
         Path directory = Files.createTempDirectory("taskman-tiers-");
         try {
-            JournalStore store = new JournalStore(directory, new GsonBuilder().create());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new GsonBuilder().create());
             store.save(journal);
             Journal loaded = store.load("7");
             check(loaded.active.tier == TaskTier.MEDIUM && loaded.completed.get(0).tier == TaskTier.HARD,
@@ -351,7 +352,7 @@ public final class CoreChecks {
         catch (IllegalArgumentException expected) { checks++; }
         Path directory = Files.createTempDirectory("taskman-time-modes-");
         try {
-            JournalStore store = new JournalStore(directory, new GsonBuilder().create());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new GsonBuilder().create());
             store.save(journal);
             Journal loaded = store.load("8");
             check(loaded.completed.get(0).timeMode == TimeMode.NOT_AVAILABLE

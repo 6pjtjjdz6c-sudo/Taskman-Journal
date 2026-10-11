@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import net.runelite.client.util.Filepath;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ public final class IntegrationChecks {
         try {
             ScriptedClient scripted = new ScriptedClient();
             TaskmanJournalPlugin plugin = new TaskmanJournalPlugin();
-            JournalStore store = new JournalStore(directory, new Gson());
+            JournalStore store = new JournalStore(Filepath.Unchecked.getRooted(directory), new Gson());
             set(plugin, "client", scripted.client);
             set(plugin, "store", store);
             plugin.onGameTick(new GameTick());

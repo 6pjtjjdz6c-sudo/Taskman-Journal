@@ -3,14 +3,11 @@ package com.taskmanjournal;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.util.Filepath;
 
 /** All widget access stays on Swing's event dispatch thread. */
 final class JournalPanel extends PluginPanel {
@@ -43,7 +40,7 @@ final class JournalPanel extends PluginPanel {
     private final JTextArea error = textArea();
 
     JournalPanel(BiConsumer<String, TaskTier> onStart, Runnable onPause, Runnable onComplete,
-                 Runnable onRetry, BiConsumer<Path, Boolean> onExport,
+                 Runnable onRetry, BiConsumer<Filepath, Boolean> onExport,
                  Consumer<HistoryItem> onUndo, Consumer<HistoryItem> onDelete,
                  Consumer<ManualEntry> onAddCompleted, Consumer<TaskTier> onActiveTier) {
         setLayout(new BorderLayout(0, 10));
@@ -319,24 +316,25 @@ final class JournalPanel extends PluginPanel {
         }
     }
 
-    private void chooseExport(boolean asJson, BiConsumer<Path, Boolean> onExport) {
+    private void chooseExport(boolean asJson, BiConsumer<Filepath, Boolean> onExport) {
         String extension = asJson ? "json" : "csv";
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter(extension.toUpperCase() + " files", extension));
-        chooser.setSelectedFile(new java.io.File("taskman-journal." + extension));
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-        Path file = chooser.getSelectedFile().toPath();
-        if (!file.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith("." + extension))
-            file = file.resolveSibling(file.getFileName() + "." + extension);
-        if (Files.exists(file) && JOptionPane.showConfirmDialog(this, "Replace the existing file?", "Export",
+        java.util.List<Filepath> selected = new Filepath.Chooser()
+            .setIsSave().setAcceptsFiles().setMultiSelectionEnabled(false)
+            .setDialogTitle(asJson ? "Save JSON backup" : "Save CSV export")
+            .addExtensionFilter(extension.toUpperCase() + " files", extension)
+            .setDefaultExtension(extension).setFileName("taskman-journal." + extension)
+            .showDialog(this);
+        if (selected == null || selected.isEmpty()) return;
+        Filepath file = selected.get(0);
+        if (file.exists() && JOptionPane.showConfirmDialog(this, "Replace the existing file?", "Export",
             JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
         onExport.accept(file, asJson);
     }
 
-    void writeExport(Path file, String data) {
+    void writeExport(Filepath file, String data) {
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
-                Files.writeString(file, data, StandardCharsets.UTF_8);
+                file.write(data);
                 return null;
             }
             @Override protected void done() {

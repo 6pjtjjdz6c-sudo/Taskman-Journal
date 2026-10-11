@@ -3,28 +3,27 @@ package com.taskmanjournal;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.Reader;
 import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import net.runelite.client.util.Filepath;
 
 /** Local-only files, one journal per stable game account hash. */
 public final class JournalStore {
-    private final Path directory;
+    private final Filepath directory;
     private final Gson gson;
-    public JournalStore(Path directory, Gson gson) { this.directory = directory; this.gson = gson; }
+    public JournalStore(Filepath directory, Gson gson) { this.directory = directory; this.gson = gson; }
 
     public Journal load(String accountId) throws IOException {
-        Path file = path(accountId);
-        if (!Files.exists(file)) {
+        Filepath file = path(accountId);
+        if (!file.exists()) {
             Journal journal = new Journal();
             journal.accountId = accountId;
             return journal;
         }
-        try {
-            Journal journal = gson.fromJson(Files.readString(file, StandardCharsets.UTF_8), Journal.class);
+        try (Reader reader = file.openBufferedReader()) {
+            Journal journal = gson.fromJson(reader, Journal.class);
             validate(journal, accountId);
             return journal;
         } catch (RuntimeException ex) {
@@ -34,27 +33,27 @@ public final class JournalStore {
 
     public void save(Journal journal) throws IOException {
         validate(journal, journal.accountId);
-        Files.createDirectories(directory);
-        Path target = path(journal.accountId);
-        Path temp = Files.createTempFile(directory, "journal-", ".tmp");
+        directory.createDirectories();
+        Filepath target = path(journal.accountId);
+        Filepath temp = directory.createTempFile("journal-", ".tmp");
         try {
-            Files.writeString(temp, gson.toJson(journal), StandardCharsets.UTF_8);
-            if (Files.exists(target))
-                Files.copy(target, target.resolveSibling(target.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
+            temp.write(gson.toJson(journal));
+            if (target.exists())
+                target.copyTo(directory.joinSegment(target.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
             try {
-                Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                temp.moveTo(target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException ex) {
-                Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+                temp.moveTo(target, StandardCopyOption.REPLACE_EXISTING);
             }
-        } finally { Files.deleteIfExists(temp); }
+        } finally { temp.deleteIfExists(); }
     }
 
     public String json(Journal journal) { return gson.toJson(journal); }
 
-    private Path path(String accountId) {
+    private Filepath path(String accountId) {
         if (accountId == null || !accountId.matches("[0-9]+"))
             throw new IllegalArgumentException("Missing account identity.");
-        return directory.resolve(accountId + ".json");
+        return directory.joinSegment(accountId + ".json");
     }
 
     private static void validate(Journal journal, String accountId) {

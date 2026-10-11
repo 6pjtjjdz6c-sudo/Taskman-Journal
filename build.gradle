@@ -1,7 +1,7 @@
 plugins { id 'java' }
 
 group = 'com.taskmanjournal'
-version = '0.5.1'
+version = '0.5.2'
 
 repositories {
     maven { url = 'https://repo.runelite.net'; content { includeGroupByRegex 'net\\.runelite.*' } }
@@ -39,3 +39,15 @@ tasks.register('integrationCheck', JavaExec) {
     jvmArgs '-ea', '-Djava.awt.headless=true'
 }
 check.dependsOn integrationCheck
+
+tasks.register('filepathCheck', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.taskmanjournal.FilepathChecks'
+    jvmArgs '-ea', '-Djava.awt.headless=true', '-Dtaskman.isolatedHome=true'
+    doFirst {
+        def isolatedHome = new File(temporaryDir, UUID.randomUUID().toString())
+        isolatedHome.mkdirs()
+        systemProperty 'user.home', isolatedHome.absolutePath
+    }
+}
+check.dependsOn filepathCheck

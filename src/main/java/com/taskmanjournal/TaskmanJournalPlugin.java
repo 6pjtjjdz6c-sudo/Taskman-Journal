@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -20,15 +19,15 @@ import net.runelite.api.GameState;
 import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.Filepath;
 
-@PluginDescriptor(name = "Taskman Journal", description = "Time, skill XP and ordered history for manual tasks",
+@PluginDescriptor(name = "Taskman Journal", internalName = "taskman-journal", legacyDataDirectory = "taskman-journal", description = "Time, skill XP and ordered history for manual tasks",
     tags = {"taskman", "tasker", "journal", "xp", "timer"})
 public class TaskmanJournalPlugin extends Plugin {
     private static final Logger LOG = Logger.getLogger(TaskmanJournalPlugin.class.getName());
@@ -51,7 +50,7 @@ public class TaskmanJournalPlugin extends Plugin {
     private String cachedHistory = "No completed tasks yet.";
 
     @Override protected void startUp() throws Exception {
-        store = new JournalStore(RuneLite.RUNELITE_DIR.toPath().resolve("taskman-journal"), gson);
+        store = new JournalStore(getPluginDirectory(), gson);
         Runnable createPanel = () -> {
             panel = new JournalPanel((name, tier) -> command(() -> {
                 engine.start(name, tier, xp(), Instant.now());
@@ -185,7 +184,7 @@ public class TaskmanJournalPlugin extends Plugin {
         }
     }
 
-    private void export(Path file, boolean asJson) {
+    private void export(Filepath file, boolean asJson) {
         clientThread.invokeLater(() -> {
             if (engine == null) { showMessage("Log in to load a journal first."); return; }
             String data = asJson ? store.json(engine.journal()) : JournalExport.csv(engine.journal());

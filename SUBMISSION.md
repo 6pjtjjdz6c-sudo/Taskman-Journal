@@ -1,6 +1,6 @@
 # Plugin Hub submission
 
-This source package has not yet been submitted or approved.
+Taskman Journal is submitted in https://github.com/runelite/plugin-hub/pull/18202 and awaits approval. Update that existing pull request when fixing reviewer feedback.
 
 1. Create a public GitHub repository named `taskman-journal` and upload the contents of this directory, including the Gradle wrapper and icon. Do not upload account journals, exports or credentials.
 2. Commit and push the source. Record the public repository URL and full 40-character commit SHA (`git rev-parse HEAD`).
@@ -22,7 +22,10 @@ The Plugin Hub standard build is requested through `build=standard`. Production 
 
 ## Validation performed
 
-Version 0.5.1 changes release packaging and documentation only. Production and test sources were compiled for Java 11 against RuneLite 1.13.1 and its Gson 2.8.5 dependency. Both assertion suites passed: 94 core and 32 headless integration assertions (126 total). This does not replace the Hub build or human review, or guarantee compatibility with a later client release.
+Version 0.5.2 replaces production file I/O with RuneLite Filepath, uses Plugin.getPluginDirectory with legacyDataDirectory migration, and uses Filepath.Chooser for exports. Production does not call Filepath.Unchecked or direct Java file I/O APIs. Tests use temporary paths and Filepath.Unchecked only in test sources.
+
+Production and test sources compile for Java 11 against RuneLite 1.13.1 and Gson 2.8.5. Validation covers the existing journal/integration assertions plus isolated Filepath migration, backups, destination preservation, confinement, UTF-8 and export truncation checks. This does not replace the Hub build or human review.
+
 
 Official requirements: https://github.com/runelite/plugin-hub/blob/master/README.md
 Review information: https://github.com/runelite/runelite/wiki/Plugin-Hub-Review

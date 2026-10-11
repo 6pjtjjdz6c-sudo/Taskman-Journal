@@ -2,7 +2,7 @@
 
 A standalone RuneLite journal for manually entered Taskman tasks. Track in-game time, XP gained in each skill, and the order tasks were completed.
 
-**Publication status:** prepared for Plugin Hub submission; not yet submitted or approved. This project is independent of the existing Taskman plugin and does not sync with it.
+**Publication status:** submitted for Plugin Hub review in [PR #18202](https://github.com/runelite/plugin-hub/pull/18202); not yet approved. This project is independent of the existing Taskman plugin and does not sync with it.
 
 ## Features
 
@@ -29,7 +29,9 @@ Only run one client for the same account at a time. RuneLite updates may require
 
 ## Privacy and storage
 
-Production code makes no network requests and accesses no login credentials. Journals are stored locally under RuneLite's `taskman-journal` directory, separated using the client's account hash. Exports go to the file selected by the user. JSON backups can contain task names, XP, dates and an account identifier; share them only if you intend to share that information. Local files remain subject to the computer's normal permissions and backup services.
+Production code makes no network requests and accesses no login credentials. Journals are stored locally under RuneLite's `plugin-data/taskman-journal` directory, separated using the client's account hash. Exports go to the file selected by the user. JSON backups can contain task names, XP, dates and an account identifier; share them only if you intend to share that information. Local files remain subject to the computer's normal permissions and backup services.
+
+Existing journals from `.runelite/taskman-journal` are migrated automatically by RuneLite when the new data directory does not already exist. Automatic saves use the plugin-scoped Filepath API, and exports use RuneLite’s file chooser.
 
 ## Development
 
@@ -40,6 +42,6 @@ Install JDK 11 or newer. Open this directory as a Gradle project in IntelliJ IDE
 .\gradlew.bat run
 ```
 
-On Linux/macOS use `./gradlew check` and `./gradlew run`. The development build uses RuneLite `latest.release`. The `check` task runs both the journal checks and headless integration checks. The development launcher is under test sources and is excluded from the plugin JAR.
+On Linux/macOS use `./gradlew check` and `./gradlew run`. The development build uses RuneLite `latest.release`. The `check` task runs the journal, headless integration and isolated Filepath checks. The development launcher is under test sources and is excluded from the plugin JAR.
 
 See [SUBMISSION.md](SUBMISSION.md) for the public release steps. Licensed under MIT; see [LICENSE](LICENSE).
